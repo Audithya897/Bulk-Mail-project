@@ -6,10 +6,15 @@ const app = express();
 
 // 1. Middlewares (Must be first)
 app.use(cors());
-app.use(express.json());
+app.use(express.json( {
+    limit:'50mb'
+}));
+app.use(express.urlencoded(
+    {limit:'50mb',extended:true}
+));
 
 // 2. MongoDB Connection
-mongoose.connect("mongodb://127.0.0.1:27017/passkey")
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("Connected to MongoDB..."))
     .catch((err) => console.log("MongoDB Connection failed...", err));
 
@@ -31,11 +36,11 @@ app.post("/sendemail", async function(req, res) {
         // Configure transporter with data from DB
         const transporter = nodemailer.createTransport({
             service: "gmail",
-            auth: {
-                user: data[0].toJSON().user,
-                pass: data[0].toJSON().pass 
+           auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS
             },
-        });
+        });   
 
         // Loop through and send emails
         for (let i = 0; i < emailList.length; i++) {
@@ -59,3 +64,5 @@ app.post("/sendemail", async function(req, res) {
 app.listen(5000, function() {
     console.log("Server started on port 5000...");
 });
+
+module.exports = app;
